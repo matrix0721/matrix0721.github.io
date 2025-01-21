@@ -17,7 +17,6 @@ where $\beta_t$ is a hyperparameter. We can calculate the $q(x_t\mid x_0)$ by re
 $$
 q(x_t\mid x_0)=\mathcal{N}(x_t;\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)\mathbf{I}) \tag{2}
 $$
-
 where $\bar{\alpha}_t=\prod_{i=1}^{t}(1-\beta_i)$. Using reparametrization trick, we can sample $x_t$ from $q(x_t\mid x_0)$ as:
 
 $$
@@ -104,7 +103,7 @@ It might take several Langevin dynamics steps to converge to the correct score. 
 In the paper "Classifier-Free Guidance is a Predictor-Corrector", the authors make a correction of CFG score after the diffusion denoising process. We may wonder whether it is possible to make a correction to the CFG score before the diffusion denoising process. In the paper "CFG++: Manifold-constrained Classifier Free Guidance for Diffusion Models", the authors propose a method called CFG++, which makes a correction to the CFG score before the diffusion denoising process. 
 
 The algorithm can be summarized as follows:
-![1737453609076](matrix0721.github.io/_posts/image/CFG_en/1737453609076.png)
+![1737453609076](/matrix0721.github.io/_posts/image/CFG_en/1737453609076.png)
 
 Compared with CFG, CFG++ makes a correction of the CFG score at the diffusion denoising process. The authors treat the solution of CFG score as a diffusion model-based inverse problem and make the loss function to be a text-conditioned score matching loss.
 
@@ -156,7 +155,7 @@ In the paper "Analysis of Classifier-Free Guidance Weight Schedulers", the autho
 
 In the paper "Inner Classifier-Free Guidance and Its Taylor Expansion for Diffusion Models", the authors prove that CFG is a first-order approximation of the inner conditional guidance and expand CFG to be a second-order approximation of the inner conditional guidance. The algorithm can be summarized as follows:
 
-![1737473006172](matrix0721.github.io/_posts/image/CFG_en/1737473006172.png)
+![1737473006172](/matrix0721.github.io/_posts/image/CFG_en/1737473006172.png)
 
 ## References
 
