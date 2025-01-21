@@ -23,6 +23,7 @@ where $\bar{\alpha}_t=\prod_{i=1}^{t}(1-\beta_i)$. Using reparametrization trick
 $$
 x_t=\sqrt{\bar{\alpha}_t}x_0+\sqrt{1-\bar{\alpha}_t}\epsilon_t \tag{3}
 $$
+
 where $\epsilon_t\sim\mathcal{N}(\mathbf{0},\mathbf{I})$.
 
 During the denoising process, the model predicts the distribution of $x_0$ from $x_t$ and $t$. Suppose the model is trained to predict the distribution of $x_0$ as $p_\theta(x_0\mid x_t)$.
