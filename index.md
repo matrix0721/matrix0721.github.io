@@ -1,5 +1,1 @@
-Here you can say lots of fun things about your site.
-
-Maybe say a some things about yourself.
-
-Or maybe what you plan to blog about.
+I'm Jiadong Pan, a master student at the University of Chinese Academy of Sciences. I want to write something on the topic of artificial intelligence.
