@@ -189,6 +189,6 @@ If you want to cite this article, you can use the following BibTeX:
   author={Jiadong Pan},
   year={2025},
   month={January},
-  url={\url{}}
+  url={\url{https://matrix0721.github.io/2025/01/21/a-summary-of-classifier-free-guidance-and-its-improvements.html}}
 }
 ```
