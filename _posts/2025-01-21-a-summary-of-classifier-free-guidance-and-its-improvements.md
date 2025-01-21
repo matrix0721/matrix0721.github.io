@@ -6,53 +6,53 @@ Classifier-Free Guidance (CFG) is widely used in the field of image generation t
 
 ### Diffusion Model
 
-Diffusion models are widely used in the field of image generation inspired by a physical process called non-equilibrium thermodynamics. Given data $x_0\sim q(x)$, where $q(x)$ is the data distribution, the diffusion model aims to learn a denoising process $p_\theta(x_{0:T}|x_T)$ to generate data from noise. Diffusion model can be divided into two processes: forward process and denoising process. During the forward process, the model samples the data distribution $q(x_t|x_{t-1})$ to generate data from noise. During the reverse process, the model learns the reverse process $p_\theta(x_{t-1}|x_t)$ to generate data from noise, where $x_t$ refers to the data at time step $t$ corresponding to the noise level at time step $t$. Using DDPM [1] as an example, the forward process is defined as:
+Diffusion models are widely used in the field of image generation inspired by a physical process called non-equilibrium thermodynamics. Given data $x_0\sim q(x)$, where $q(x)$ is the data distribution, the diffusion model aims to learn a denoising process $p_\theta(x_{0:T}\mid x_T)$ to generate data from noise. Diffusion model can be divided into two processes: forward process and denoising process. During the forward process, the model samples the data distribution $q(x_t\mid x_{t-1})$ to generate data from noise. During the reverse process, the model learns the reverse process $p_\theta(x_{t-1}\mid x_t)$ to generate data from noise, where $x_t$ refers to the data at time step $t$ corresponding to the noise level at time step $t$. Using DDPM [1] as an example, the forward process is defined as:
 
 $$
-q(x_t|x_{t-1})=\mathcal{N}(x_t;\sqrt{1-\beta_t}x_{t-1},\beta_t\mathbf{I}) \tag{1}
+q(x_t\mid x_{t-1})=\mathcal{N}(x_t;\sqrt{1-\beta_t}x_{t-1},\beta_t\mathbf{I}) \tag{1}
 $$
 
-where $\beta_t$ is a hyperparameter. We can calculate the $q(x_t|x_0)$ by recursively applying the forward process:
+where $\beta_t$ is a hyperparameter. We can calculate the $q(x_t\mid x_0)$ by recursively applying the forward process:
 
 $$
-q(x_t|x_0)=\mathcal{N}(x_t;\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)\mathbf{I}) \tag{2}
+q(x_t\mid x_0)=\mathcal{N}(x_t;\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)\mathbf{I}) \tag{2}
 $$
 
-where $\bar{\alpha}_t=\prod_{i=1}^{t}(1-\beta_i)$. Using reparametrization trick, we can sample $x_t$ from $q(x_t|x_0)$ as:
+where $\bar{\alpha}_t=\prod_{i=1}^{t}(1-\beta_i)$. Using reparametrization trick, we can sample $x_t$ from $q(x_t\mid x_0)$ as:
 
 $$
 x_t=\sqrt{\bar{\alpha}_t}x_0+\sqrt{1-\bar{\alpha}_t}\epsilon_t \tag{3}
 $$
 where $\epsilon_t\sim\mathcal{N}(\mathbf{0},\mathbf{I})$.
 
-During the denoising process, the model predicts the distribution of $x_0$ from $x_t$ and $t$. Suppose the model is trained to predict the distribution of $x_0$ as $p_\theta(x_0|x_t)$.
+During the denoising process, the model predicts the distribution of $x_0$ from $x_t$ and $t$. Suppose the model is trained to predict the distribution of $x_0$ as $p_\theta(x_0\mid x_t)$.
 
 For DDPM, the model tries to predict the added noise $\epsilon_t$ from $x_t$ and $x_0$. Suppose the model is trained to predict the noise $\epsilon_\theta(x_t,t)$, the training objective is to minimize the following loss:
 
 $$
-\mathbb{E}_{x_0\sim q(x_0),t\sim[1,T]}[\|\epsilon_\theta(x_t,t)-\epsilon_t\|^2] \tag{4}
+\mathbb{E}_{x_0\sim q(x_0),t\sim[1,T]}[\| \epsilon_\theta(x_t,t)-\epsilon_t\| ^2] \tag{4}
 $$
 
-During the generation process, the model samples the data distribution $q(x_t|x_{t-1})$ to generate data from noise. The score (predicted noise) $\epsilon_\theta(x_t,t)$ is used to guide the generation process. The relationship between score and predicted noise is given by:
+During the generation process, the model samples the data distribution $q(x_t\mid x_{t-1})$ to generate data from noise. The score (predicted noise) $\epsilon_\theta(x_t,t)$ is used to guide the generation process. The relationship between score and predicted noise is given by:
 
 $$
 \epsilon_\theta(x_t,t)=-\sigma_t\nabla_x\log p(x_t) \tag{5}
 $$
  
-To generate conditional data, the model is trained to sample the conditional data distribution $q(x|c)$, where $c$ is the condition, and the training objective is to predict the conditional score $s(x,t,c)=\nabla_x\log q(x|c)$, where $t$ is the time step determining the noise level. 
+To generate conditional data, the model is trained to sample the conditional data distribution $q(x\mid c)$, where $c$ is the condition, and the training objective is to predict the conditional score $s(x,t,c)=\nabla_x\log q(x\mid c)$, where $t$ is the time step determining the noise level. 
 However, during the practical application, the performance of predicting the conditional score is not good enough, leading to images with low quality and low diversity. To deal with this problem, guidance methods, such as classifier-free guidance and its former method classifier guidance, are proposed to improve the quality of generated conditional images. Classifier guidance is firstly introduced, and then classifier-free guidance is discussed. 
 
 
 ### Classifier Guidance
 
 At first, diffusion models are trained without any conditions or labels. To generate images belonging to specific classes, Dhariwal P et al. [2] propose classifier guidance to guide the model to generate images with specific classes.
-The core idea of classifier guidance is guiding the generation process by adding the gradient of the log-probability of the class conditional to the noise prediction. The score $\epsilon_\theta(x_t,t,c)=-\sigma_t\nabla_x\log p(x_t|c)$ is changed to be:
+The core idea of classifier guidance is guiding the generation process by adding the gradient of the log-probability of the class conditional to the noise prediction. The score $\epsilon_\theta(x_t,t,c)=-\sigma_t\nabla_x\log p(x_t\mid c)$ is changed to be:
 
 $$
-\tilde\epsilon_\theta(x_t,t,c)=\epsilon_\theta(x_t,t,c)-\lambda\sigma_t\nabla_{x_t}\log p_\phi(c|x_t) \approx -\sigma_t\nabla_{x_t}(\log p(x_t|c)+\lambda\log p_\phi(c|x_t)) \tag{6}
+\tilde\epsilon_\theta(x_t,t,c)=\epsilon_\theta(x_t,t,c)-\lambda\sigma_t\nabla_{x_t}\log p_\phi(c\mid x_t) \approx -\sigma_t\nabla_{x_t}(\log p(x_t\mid c)+\lambda\log p_\phi(c\mid x_t)) \tag{6}
 $$
 
-Here $\phi$ is an classifier trained to predict the class conditional probability $p_\phi(c|x_t)$ and $\lambda$ is a hyperparameter to control the strength of the guidance. It results in the distribution $\tilde{p}(x_t|c)= p(x_t|c)p_{\phi}(c|x_t)^\lambda$. It can be seen that $p_{\phi}(c|x_t)$ increases the probability of the generated image belonging to the class $c$ and $\lambda$ controls the strength of the guidance. Classifier guidance can be applied to both pretrained no-condtional and conditional diffusion models. For conditional diffusion models, classifier guidance can be used to enhance the condition of the generation process to obtain better conditional images.
+Here $\phi$ is an classifier trained to predict the class conditional probability $p_\phi(c\mid x_t)$ and $\lambda$ is a hyperparameter to control the strength of the guidance. It results in the distribution $\tilde{p}(x_t\mid c)= p(x_t\mid c)p_{\phi}(c\mid x_t)^\lambda$. It can be seen that $p_{\phi}(c\mid x_t)$ increases the probability of the generated image belonging to the class $c$ and $\lambda$ controls the strength of the guidance. Classifier guidance can be applied to both pretrained no-condtional and conditional diffusion models. For conditional diffusion models, classifier guidance can be used to enhance the condition of the generation process to obtain better conditional images.
 
 ## Classifier-Free Guidance
 
@@ -67,10 +67,10 @@ where $\epsilon_\theta(x_t,t)$ is the score of the unconditional diffusion model
 If we see the relationship between the gradient of the log-probability and the score, we can find that:
 
 $$
-\nabla_x\log p(c|x_t)= -\frac{1}{\sigma_t}(\epsilon_\theta(x_t,t,c)-\epsilon_\theta(x_t,t)) \tag{8}
+\nabla_x\log p(c\mid x_t)= -\frac{1}{\sigma_t}(\epsilon_\theta(x_t,t,c)-\epsilon_\theta(x_t,t)) \tag{8}
 $$
 
-Here we use the Bayes' rule $p(c|x_t) \propto p(x_t|c)/p(x_t)$ and the score prediction equation, which satisfies $\nabla_x\log p(x_t|c)=-\frac{1}{\sigma_t}\epsilon_\theta(x_t,t,c)$ and $\nabla_x\log p(x_t)=-\frac{1}{\sigma_t}\epsilon_\theta(x_t,t)$. In this way, classifier-free guidance replaces the classifier in classifier guidance with the difference between the conditional and unconditional score. Therefore, classifier-free guidance do not need to train a classifier and the diffusion model itself can be used to generate better conditional images.
+Here we use the Bayes' rule $p(c\mid x_t) \propto p(x_t\mid c)/p(x_t)$ and the score prediction equation, which satisfies $\nabla_x\log p(x_t\mid c)=-\frac{1}{\sigma_t}\epsilon_\theta(x_t,t,c)$ and $\nabla_x\log p(x_t)=-\frac{1}{\sigma_t}\epsilon_\theta(x_t,t)$. In this way, classifier-free guidance replaces the classifier in classifier guidance with the difference between the conditional and unconditional score. Therefore, classifier-free guidance do not need to train a classifier and the diffusion model itself can be used to generate better conditional images.
 
 ## Improvements of Classifier-Free Guidance
 
@@ -80,14 +80,14 @@ In this section, we will discuss some improvements of classifier-free guidance.
 
 ### Classifier-Free Guidance is a Predictor-Corrector [3]
 
-It can be seen that CFG uses Equation (7) to sharpen the distribution of given condition to be a gamma-powered distribution: $\tilde{p}(x_t|c)= p(x_t)^{1-\lambda}p(x_t|c)^\lambda$. However, there is a problem in the diffusion forward process that CFG scores might not be a valid score. In the paper [3], authors put forward that $\tilde{p}(x_t|c)$ is not the same as the distribution
-obtained by applying a forward diffusion process to the gamma-powered data distribution $\tilde{p}(x_0|c)$. Using $N_t[p]$ to denote the diffusion forward process from $t=0$ to $t=t$, 
+It can be seen that CFG uses Equation (7) to sharpen the distribution of given condition to be a gamma-powered distribution: $\tilde{p}(x_t\mid c)= p(x_t)^{1-\lambda}p(x_t\mid c)^\lambda$. However, there is a problem in the diffusion forward process that CFG scores might not be a valid score. In the paper [3], authors put forward that $\tilde{p}(x_t\mid c)$ is not the same as the distribution
+obtained by applying a forward diffusion process to the gamma-powered data distribution $\tilde{p}(x_0\mid c)$. Using $N_t[p]$ to denote the diffusion forward process from $t=0$ to $t=t$, 
 
 $$
-\tilde{p}(x_t|c)=N_t[{p}(x|c)]^{\lambda}N_t[p(x)]^{1-\lambda} \neq N_t[p(x_0|c)^\lambda p(x_0)^{1-\lambda}] \tag{9}
+\tilde{p}(x_t\mid c)=N_t[{p}(x\mid c)]^{\lambda}N_t[p(x)]^{1-\lambda} \neq N_t[p(x_0\mid c)^\lambda p(x_0)^{1-\lambda}] \tag{9}
 $$
 
-The distribution of $\tilde{p}(x_t|c)$ is not corresponding to any trained forward process, making the predicted score not valid. To solve the problem, the authors propose a method called predictor-corrector guidance (PCG), which combines diffusion denoising process and Langevin dynamics steps to correct the CFG predicted score belonging to a unknown distribution. 
+The distribution of $\tilde{p}(x_t\mid c)$ is not corresponding to any trained forward process, making the predicted score not valid. To solve the problem, the authors propose a method called predictor-corrector guidance (PCG), which combines diffusion denoising process and Langevin dynamics steps to correct the CFG predicted score belonging to a unknown distribution. 
 
 The algorithm can be summarized as follows: At timestep $t$,
 1. Predictor: Take diffusion denoising process to predict the score $\epsilon_\theta(x_t,t,c)$ to move to time $t'=t-\Delta t$
@@ -108,7 +108,7 @@ The algorithm can be summarized as follows:
 Compared with CFG, CFG++ makes a correction of the CFG score at the diffusion denoising process. The authors treat the solution of CFG score as a diffusion model-based inverse problem and make the loss function to be a text-conditioned score matching loss.
 
 $$
-\min_{x\sim q(x)}\|\epsilon_\theta(\sqrt{\bar{\alpha}_t}x+\sqrt{1-\bar{\alpha}_t}\epsilon,t,c)-\epsilon\|^2 \tag{11}
+\min_{x\sim q(x)}\| \epsilon_\theta(\sqrt{\bar{\alpha}_t}x+\sqrt{1-\bar{\alpha}_t}\epsilon,t,c)-\epsilon\| ^2 \tag{11}
 $$
 
 where $\epsilon$ is the noise sampled from the Gaussian distribution.
